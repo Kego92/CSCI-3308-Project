@@ -1,0 +1,4 @@
+ - Caught up on how we broke up our user stories to be more exact
+ - Talked about how we updated our codebase for database, docker, front end skeleton
+ - Presented final list of features, favs page, portfolio tracker, search, login, and register
+ - Set goal of having a rough draft of the page with basic features while debugging complex tasks
