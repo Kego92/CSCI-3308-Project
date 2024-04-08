@@ -6,8 +6,8 @@ in which case, the password value here is going to be a hash and not a direct co
 DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
-    email NOT NULL VARCHAR(50),
-    password NOT NULL VARCHAR(50),
+    email VARCHAR(50) NOT NULL,
+    password VARCHAR(50) NOT NULL
 );
 
 /*
@@ -16,7 +16,7 @@ This is just a list of stocks. It has an ID and a ticker symbol.
 DROP TABLE IF EXISTS stocks CASCADE;
 CREATE TABLE IF NOT EXISTS stocks (
     stock_id SERIAL PRIMARY KEY,
-    ticker_symbol NOT NULL VARCHAR(15),
+    ticker_symbol VARCHAR(15) NOT NULL
 );
 
 /*
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS users_to_favorite_stocks (
     user_id INT NOT NULL,
     stock_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    FOREIGN KEY (stock_id) REFERENCES stocks (stock_id) ON DELETE CASCADE,
+    FOREIGN KEY (stock_id) REFERENCES stocks (stock_id) ON DELETE CASCADE
 );
 
 
@@ -43,5 +43,5 @@ CREATE TABLE IF NOT EXISTS users_to_portfolio_stocks (
     stock_id INT NOT NULL,
     shares_owned INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    FOREIGN KEY (stock_id) REFERENCES stocks (stock_id) ON DELETE CASCADE,
+    FOREIGN KEY (stock_id) REFERENCES stocks (stock_id) ON DELETE CASCADE
 );
