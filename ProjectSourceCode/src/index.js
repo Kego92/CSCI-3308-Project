@@ -88,6 +88,41 @@ app.post('/login', (req, res) => {
     });
 });
 
+// Add the registration route
+
+// GET route for the registration page
+app.get('/register', (req, res) => {
+  res.render('pages/register', {
+    title: 'Register Account',
+    message: 'Please fill out the form to register.'
+  });
+});
+
+app.post('/register', async (req, res) => 
+{
+  const { username, password, email } = req.body;
+  if (!username || !password || !email) 
+  {
+    return res.status(400).send('All fields are required');
+  }
+
+  try 
+  {
+    const user = await db.one(
+      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *',
+      [username, email, hashedPassword]
+    );
+    res.render('pages/portfolio', { user: user });
+  } 
+  catch (error) 
+  {
+    console.error('Registration error:', error);
+    res.status(500).send('Error registering the user');
+  }
+});
+
+
+
 // logout endpoint
 app.get('/logout', (req, res) => {
   req.session.destroy();
