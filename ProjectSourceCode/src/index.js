@@ -58,7 +58,42 @@ db.connect()
 
 // ------------------------------------------  ROUTES  --------------------------------------------
 
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
+
+app.get('/login', (req, res) => {
+  res.render('pages/login',{});
+});
+
+app.post('/login', (req, res) => {
+  const email = req.body.email;
+  const query = 'select * from users where users.email = $1 LIMIT 1';
+  const values = [email];
+
+  // get the user_id based on the emailid
+  db.one(query, values)
+    .then(data => {
+      user.user_id = data.user_id;
+      user.email = data.email;
+
+      req.session.user = user;
+      req.session.save();
+
+      res.redirect('/');
+    })
+    .catch(err => {
+      console.log(err);
+      res.redirect('/login');
+    });
+});
+
+// logout endpoint
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.render('pages/logout');
+});
 
 // -------------------------------------  START THE SERVER   ----------------------------------------------
-app.listen(3000);
+module.exports = app.listen(3000);
 console.log('Server is listening on port 3000');
