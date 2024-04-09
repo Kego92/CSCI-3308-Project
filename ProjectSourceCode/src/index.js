@@ -66,6 +66,71 @@ app.get('/login', (req, res) => {
   res.render('pages/login',{});
 });
 
+app.post('/login', (req, res) => {
+  const email = req.body.email;
+  const query = 'select * from users where users.email = $1 LIMIT 1';
+  const values = [email];
+
+  // get the user_id based on the emailid
+  db.one(query, values)
+    .then(data => {
+      user.user_id = data.user_id;
+      user.email = data.email;
+
+      req.session.user = user;
+      req.session.save();
+
+      res.redirect('/');
+    })
+    .catch(err => {
+      console.log(err);
+      res.redirect('/login');
+    });
+});
+
+// Add the registration route
+
+// GET route for the registration page
+app.get('/register', (req, res) => {
+  res.render('pages/register', {
+    title: 'Register Account',
+    message: 'Please fill out the form to register.'
+  });
+});
+
+app.post('/register', async (req, res) => 
+{
+  const { email, password } = req.body;
+  if (!email || !password) 
+  {
+      return res.status(400).send('Email and password are required');
+  }
+
+  try 
+  {
+      const user = await db.one
+      (
+          'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
+          [email, password]
+      );
+      res.render('pages/login');
+  } 
+  
+  catch (error) 
+  {
+      console.error('Registration error:', error);
+      res.status(500).send('Error registering the user');
+  }
+});
+
+
+
+// logout endpoint
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.render('pages/logout');
+});
+
 // -------------------------------------  START THE SERVER   ----------------------------------------------
 module.exports = app.listen(3000);
 console.log('Server is listening on port 3000');
