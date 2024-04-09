@@ -100,24 +100,26 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => 
 {
-  const { username, password, email } = req.body;
-  if (!username || !password || !email) 
+  const { email, password } = req.body;
+  if (!email || !password) 
   {
-    return res.status(400).send('All fields are required');
+      return res.status(400).send('Email and password are required');
   }
 
   try 
   {
-    const user = await db.one(
-      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *',
-      [username, email, hashedPassword]
-    );
-    res.render('pages/portfolio', { user: user });
+      const user = await db.one
+      (
+          'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
+          [email, password]
+      );
+      res.render('pages/login');
   } 
+  
   catch (error) 
   {
-    console.error('Registration error:', error);
-    res.status(500).send('Error registering the user');
+      console.error('Registration error:', error);
+      res.status(500).send('Error registering the user');
   }
 });
 
