@@ -21,6 +21,7 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json());
+app.use(express.static(__dirname + '/resources'));
 // set Session
 app.use(
   session({
@@ -123,6 +124,20 @@ app.post('/register', async (req, res) =>
   }
 });
 
+app.get("/favorites", (req,res) =>
+{
+  res.render("pages/favorites")
+});
+
+app.get("/portfolio", (req,res) =>
+{
+  res.render("pages/portfolio")
+});
+
+app.get("/search", (req,res) =>
+{
+  res.render("pages/search")
+});
 
 
 // logout endpoint
