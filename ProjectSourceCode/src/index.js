@@ -63,7 +63,7 @@ app.get('/welcome', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.render('pages/login',{});
+  res.render('pages/login.hbs');
 });
 
 app.post('/login', (req, res) => {
