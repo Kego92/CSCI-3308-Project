@@ -94,6 +94,13 @@ app.get('/logout', (req, res) => {
   res.render('pages/logout');
 });
 
+
+//This is the get endpoint for search. All it does is render the website by itself
+//Any actual search functionality will be relegated to 
+app.get('/search', (req, res) => {
+  res.render('pages/search');
+})
+
 // -------------------------------------  START THE SERVER   ----------------------------------------------
 module.exports = app.listen(3000);
 console.log('Server is listening on port 3000');

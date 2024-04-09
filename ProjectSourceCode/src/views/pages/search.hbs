@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<body>
+    <!--This form contains the search bar.
+        The text typed into it is passed to the post /search method when the button is clicked.-->
+    <form>
+        <label for="search-bar">Search</label>
+        <input id="search-bar" type="text">
+        <button type="submit">Search</button>
+    </form>
+
+    <h3>Results</h3>
+    <!--Down here is where, if any, the results of the search will show up
+        An array of stock info is passed to the partial, which is then processed here
+        putting each stock's symbol and company name into a card
+        The symbol goes in the head, the name in the body
+        There will also be a button at the right end of each card that will add that stock to the user's favorite list-->
+    <div>
+        <div class="card">
+            <div clas="card-body">
+                <h5 class="card-title">
+                    Sample
+                </h5>
+                <p class="card-text">
+                    Sample
+                </p>
+            </div>
+        </div>
+        <div class="card">
+            <div clas="card-body">
+                <h5 class="card-title">
+                    Sample
+                </h5>
+                <p class="card-text">
+                    Sample
+                </p>
+            </div>
+        </div>
+        <div class="card">
+            <div clas="card-body">
+                <h5 class="card-title">
+                    Sample
+                </h5>
+                <p class="card-text">
+                    Sample
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
