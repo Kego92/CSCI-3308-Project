@@ -29,4 +29,30 @@ describe('Server!', () => {
 
 // *********************** TODO: WRITE 2 UNIT TESTCASES **************************
 
+describe('Register-Positive', () => {
+  it('Positive: /register', done => {
+    chai
+      .request(server)
+      .post('/register')
+      .send({email:'email@gmail.com', password:'password'})
+      .end((err, res) => {
+        expect(res.to.have.status(200));
+        done(); // might need another expect here
+      });
+  })
+});
+
+describe('Register-Negative', () => {
+  it('Negative: /register', done => {
+    chai
+      .request(server)
+      .post('/register')
+      .send({email:'email@gmail.com', password:'password'})
+      .end((err, res) => {
+        expect(res.to.have.status(200));
+        done(); // might need another expect here
+      });
+  })
+});
+
 // ********************************************************************************
