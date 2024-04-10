@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+{{#if error}}
+  <div class="alert alert-danger">{{error}}.</div>
+{{/if}}
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +13,7 @@
 <h1>User Registration</h1>
 <form action="/register" method="POST">
     <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required><br><br>
+    <input type="email" id="username" name="email" required><br><br>
 
     <label for="password">Password:</label>
     <input type="password" id="password" name="password" required><br><br>
