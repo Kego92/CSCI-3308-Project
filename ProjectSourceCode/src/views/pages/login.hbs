@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+{{#if error}}
+  <div class="alert alert-danger">{{error}}</div>
+{{/if}}
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -11,7 +14,7 @@
 <h2>Login Form</h2>
 <form action="/login" method="POST">
     <label for="username">Username:</label><br>
-    <input type="text" id="username" name="username"><br><br>
+    <input type="text" id="username" name="email"><br><br>
     <label for="password">Password:</label><br>
     <input type="password" id="password" name="password"><br><br>
     <button type="submit">Login</button>
