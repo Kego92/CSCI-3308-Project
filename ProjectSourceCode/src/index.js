@@ -106,8 +106,7 @@ app.get('/search', (req, res) => {
 //It passes the searched string into a call to the API, which returns a list of stocks and their info
 //We then render the page again, passing that info to build cards for each searched stock.
 app.post('/search', (req, res) =>{
-  var searched_stock = [0, 1, 2];
-  //Here's the 
+  //Here's the axios call to the API. This is where we actually get the searched stocks
   axios({
     url: `https://api.polygon.io/v3/reference/tickers`,
     method: 'GET',
@@ -118,16 +117,32 @@ app.post('/search', (req, res) =>{
       'Authorization': 'Bearer FSgRaU3KnQzDdptepqG3L8Jf_k3jsLzw',
     },
     params: {
+      //The search parameter contains the actual text inputted for the search.
       search: req.body.input,
+      //The limit parameter is set to 20 so our results aren't a million billion things long
       limit: 20,
     }
   })
     .then(results => {
-      console.log(results.data); // the results will be displayed on the terminal if the docker containers are running // Send some parameters
-      searched_stock = results.data;
-      res.render('pages/search', {searched_stock});
+      //Checking if there are any results to begin with
+      if (results.data)
+      {
+        //I print it out immediately to make things easier to visualize on my end.
+        console.log(results.data);
+        searched_stock = results.data;
+        //Once we have our results, we render the page again while passing the results to search.hbs
+        //Within that file, there's a mechanism to build cards from whatever is put in.
+        res.render('pages/search', {searched_stock});
+      }
+      else
+      {
+        //if an error wasn't returned but there are still no results, we go here.
+        //I suppose you could maybe put in a "no results found" thing for this?
+        res.render('pages/search');
+      }
     })
     .catch(error => {
+      //I don't have a rigurous error procedure yet. Once I go back and look at testing stuff I'll see what I can do.
       res.render('pages/search');
     });
 

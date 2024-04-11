@@ -4,6 +4,7 @@
         The text typed into it is passed to the post /search method when the button is clicked.-->
     <form action="/search" method="post">
         <label for="search-bar">Search</label>
+        <!--This is the input text boxt. req.body.input is used in the axios call to the API-->
         <input id="search-bar" name="input" type="text">
         <button type="submit">Search</button>
     </form>
@@ -15,6 +16,8 @@
         The symbol goes in the head, the name in the body
         There will also be a button at the right end of each card that will add that stock to the user's favorite list-->
     <div>
+        <!--The code takes in a "searched_stock" object from the post method, then for each "result" in it, makes a card
+        Each result has a ticker and name, which are used for the title and body of the card respectively-->
         {{#each searched_stock.results}}
         <div class="card">
             <div clas="card-body">
