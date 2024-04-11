@@ -55,4 +55,30 @@ describe('Register-Negative', () => {
   })
 });
 
-// ***************************** TESTING ***********************************
+// ***************************** TESTING LOGIN ***********************************
+
+describe('Login-Positive', () => {
+  it('Positive: /login', done => {
+    chai
+      .request(server)
+      .post('/login')
+      .send({email:'email@gmail.com', password:'password'})
+      .end((err, res) => {
+        expect(res).to.have.status(200);
+        done(); 
+      });
+  })
+});
+
+describe('Login-Negative', () => {
+  it('Negative: /login', done => {
+    chai
+      .request(server)
+      .post('/login')
+      .send({email:'emailgmail.com', password:'password'})
+      .end((err, res) => {
+        expect(res).to.have.status(400);
+        done(); 
+      });
+  })
+});
