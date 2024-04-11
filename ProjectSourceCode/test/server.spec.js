@@ -36,8 +36,8 @@ describe('Register-Positive', () => {
       .post('/register')
       .send({email:'email@gmail.com', password:'password'})
       .end((err, res) => {
-        expect(res.to.have.status(200));
-        done(); // might need another expect here
+        expect(res).to.have.status(200);
+        done(); 
       });
   })
 });
@@ -47,10 +47,10 @@ describe('Register-Negative', () => {
     chai
       .request(server)
       .post('/register')
-      .send({email:'email@gmail.com', password:'password'})
+      .send({email:'1234@gmail.com', password:'password'})
       .end((err, res) => {
-        expect(res.to.have.status(200));
-        done(); // might need another expect here
+        expect(res).to.have.status(302);
+        done();
       });
   })
 });
