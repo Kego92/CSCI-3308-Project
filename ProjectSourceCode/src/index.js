@@ -99,16 +99,16 @@ app.post('/login', async (req, res) => {
   const query = 'select * from users where users.email = $1 LIMIT 1';
   const values = [email];
 
+  if (!email && !password) {
+    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
+  }
+
   if (!email) {
     return res.redirect(`/login?error=${encodeURIComponent('Email is required')}`);
   }
 
   if (!password) {
     return res.redirect(`/login?error=${encodeURIComponent('Password is required')}`);
-  }
-
-  if (!email && !password) {
-    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
   }
 
   try {
@@ -143,16 +143,19 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
   const { email, password } = req.body;
 
+  if (!email && !password) {
+    console.error('Error: Email and password are required');
+    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
+  }
+
   if (!email) {
+    console.error('Error: Email is required');
     return res.redirect(`/register?error=${encodeURIComponent('Email is required')}`);
   }
 
   if (!password) {
+    console.error('Error: Password is required');
     return res.redirect(`/register?error=${encodeURIComponent('Password is required')}`);
-  }
-
-  if (!email && !password) {
-    return res.redirect(`/register?error=${encodeURIComponent('Email and password are required')}`);
   }
 
   try {
@@ -163,11 +166,9 @@ app.post('/register', async (req, res) => {
       [email, hashedPassword]
     );
     res.redirect('/login');
-    
   } catch (error) {
     console.error('Registration error:', error);
-
-    res.redirect(`/register?error=${encodeURIComponent(error)}`);
+    return res.redirect(`/register?error=${encodeURIComponent('There was an issue registering your account')}`);
   }
 });
 
