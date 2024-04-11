@@ -7,6 +7,7 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+var validator = require('validator');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -100,15 +101,21 @@ app.post('/login', async (req, res) => {
   const values = [email];
 
   if (!email && !password) {
-    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
+    return res.redirect(400, `/login?error=${encodeURIComponent('Email and password are required')}`);
   }
 
   if (!email) {
-    return res.redirect(`/login?error=${encodeURIComponent('Email is required')}`);
+    return res.redirect(400, `/login?error=${encodeURIComponent('Email is required')}`);
   }
 
   if (!password) {
-    return res.redirect(`/login?error=${encodeURIComponent('Password is required')}`);
+    return res.redirect(400, `/login?error=${encodeURIComponent('Password is required')}`);
+  }
+
+  const validEmail = validator.isEmail(email); 
+  if (!validEmail)
+  {
+    return res.redirect(400, `/register?error=${encodeURIComponent('Valid email is required')}`);
   }
 
   try {
@@ -118,12 +125,12 @@ app.post('/login', async (req, res) => {
       req.session.user = { user_id: user.user_id, email: user.email };
       req.session.save();
 
-      res.redirect('/favorites');
+      res.redirect(200, '/favorites');
     } else {
-      return res.redirect(`/login?error=${encodeURIComponent('Password is incorrect')}`);
+      return res.redirect(400, `/login?error=${encodeURIComponent('Password is incorrect')}`);
     }
   } catch (err) {
-    return res.redirect(`/login?error=${encodeURIComponent('ERROR: User not found')}`);
+    return res.redirect(400, `/login?error=${encodeURIComponent('ERROR: User not found')}`);
   }
 });
 
@@ -141,35 +148,42 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  //hash the password using bcrypt library
+  const hash = await bcrypt.hash(req.body.password, 10);
 
-  if (!email && !password) {
-    console.error('Error: Email and password are required');
-    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
+  if (!req.body.email && !req.body.password) {
+    return res.redirect(400, `/login?error=${encodeURIComponent('Email and password are required')}`);
   }
 
-  if (!email) {
-    console.error('Error: Email is required');
-    return res.redirect(`/register?error=${encodeURIComponent('Email is required')}`);
+  if (!req.body.password) {
+    return res.redirect(400, `/register?error=${encodeURIComponent('Password is required')}`);
   }
 
-  if (!password) {
-    console.error('Error: Password is required');
-    return res.redirect(`/register?error=${encodeURIComponent('Password is required')}`);
+  if (!req.body.email)
+  {
+    return res.redirect(400, `/register?error=${encodeURIComponent('Email is required')}`);
   }
 
-  try {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const user = await db.one(
-      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
-      [email, hashedPassword]
-    );
-    res.redirect('/login');
-  } catch (error) {
-    console.error('Registration error:', error);
-    return res.redirect(`/register?error=${encodeURIComponent('There was an issue registering your account')}`);
+  const validEmail = validator.isEmail(req.body.email); 
+  if (!validEmail)
+  {
+    return res.redirect(400, `/register?error=${encodeURIComponent('Valid email is required')}`);
   }
+
+  // To-DO: Insert username and hashed password into the 'users' table
+  const query = `insert into users (email, password) values ('${req.body.email}', '${hash}');`;
+  
+  db.task('get-everything', task => {
+    return task.batch([task.any(query)]);
+  })
+
+  .then(data => {
+    res.redirect(200, '/login');
+  })
+
+  .catch(err => {
+    res.redirect(500, '/register');
+  })
 });
 
 // logout endpoint
