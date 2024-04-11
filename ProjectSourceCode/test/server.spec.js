@@ -47,12 +47,12 @@ describe('Register-Negative', () => {
     chai
       .request(server)
       .post('/register')
-      .send({email:'1234@gmail.com', password:'password'})
+      .send({email:'1234', password:'password'})
       .end((err, res) => {
-        expect(res).to.have.status(302);
+        expect(res).to.have.status(400);
         done();
       });
   })
 });
 
-// ********************************************************************************
+// ***************************** TESTING ***********************************
