@@ -73,7 +73,7 @@ app.get('/', auth, (req, res) => {
   res.render('pages/home', {}, (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the home page.');
+      return res.send(500, 'An error occurred while rendering the home page.');
     }
     res.send(html);
   });
@@ -89,7 +89,7 @@ app.get('/login', (req, res) => {
   res.render('pages/login', { error: errorMessage }, (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the login page.');
+      return res.send(500, 'An error occurred while rendering the login page.');
     }
     res.send(html);
   });
@@ -101,21 +101,21 @@ app.post('/login', async (req, res) => {
   const values = [email];
 
   if (!email && !password) {
-    return res.redirect(400, `/login?error=${encodeURIComponent('Email and password are required')}`);
+    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
   }
 
   if (!email) {
-    return res.redirect(400, `/login?error=${encodeURIComponent('Email is required')}`);
+    return res.redirect(`/login?error=${encodeURIComponent('Email is required')}`);
   }
 
   if (!password) {
-    return res.redirect(400, `/login?error=${encodeURIComponent('Password is required')}`);
+    return res.redirect(`/login?error=${encodeURIComponent('Password is required')}`);
   }
 
   const validEmail = validator.isEmail(email); 
   if (!validEmail)
   {
-    return res.redirect(400, `/register?error=${encodeURIComponent('Valid email is required')}`);
+    return res.redirect(`/register?error=${encodeURIComponent('Valid email is required')}`);
   }
 
   try {
@@ -125,12 +125,12 @@ app.post('/login', async (req, res) => {
       req.session.user = { user_id: user.user_id, email: user.email };
       req.session.save();
 
-      res.redirect(200, '/favorites');
+      res.redirect('/favorites');
     } else {
-      return res.redirect(400, `/login?error=${encodeURIComponent('Password is incorrect')}`);
+      return res.redirect(`/login?error=${encodeURIComponent('Password is incorrect')}`);
     }
   } catch (err) {
-    return res.redirect(400, `/login?error=${encodeURIComponent('ERROR: User not found')}`);
+    return res.redirect(`/login?error=${encodeURIComponent('ERROR: User not found')}`);
   }
 });
 
@@ -141,7 +141,7 @@ app.get('/register', (req, res) => {
   res.render('pages/register', { error: errorMessage }, (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the register page.');
+      return res.send(500, 'An error occurred while rendering the register page.');
     }
     res.send(html);
   });
@@ -152,22 +152,22 @@ app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
 
   if (!req.body.email && !req.body.password) {
-    return res.redirect(400, `/login?error=${encodeURIComponent('Email and password are required')}`);
+    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
   }
 
   if (!req.body.password) {
-    return res.redirect(400, `/register?error=${encodeURIComponent('Password is required')}`);
+    return res.redirect(`/register?error=${encodeURIComponent('Password is required')}`);
   }
 
   if (!req.body.email)
   {
-    return res.redirect(400, `/register?error=${encodeURIComponent('Email is required')}`);
+    return res.redirect(`/register?error=${encodeURIComponent('Email is required')}`);
   }
 
   const validEmail = validator.isEmail(req.body.email); 
   if (!validEmail)
   {
-    return res.redirect(400, `/register?error=${encodeURIComponent('Valid email is required')}`);
+    return res.redirect(`/register?error=${encodeURIComponent('Valid email is required')}`);
   }
 
   // To-DO: Insert username and hashed password into the 'users' table
@@ -178,11 +178,11 @@ app.post('/register', async (req, res) => {
   })
 
   .then(data => {
-    res.redirect(200, '/login');
+    res.redirect('/login');
   })
 
   .catch(err => {
-    res.redirect(500, '/register');
+    res.redirect('/register');
   })
 });
 
@@ -191,7 +191,7 @@ app.get('/logout', auth, (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Session destruction error:', err);
-      return res.status(500).send('Error logging out');
+      return res.send(500, 'Error logging out');
     }
     // Clear client side cookies
     res.clearCookie('connect.sid');
@@ -204,7 +204,7 @@ app.get('/favorites', auth, (req, res) => {
   res.render('pages/favorites', (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the favorites page.');
+      return res.send(500, 'An error occurred while rendering the favorites page.');
     }
     res.send(html);
   });
@@ -215,7 +215,7 @@ app.get('/portfolio', auth, (req, res) => {
   res.render('pages/portfolio', (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the portfolio page.');
+      return res.send(500, 'An error occurred while rendering the portfolio page.');
     }
     res.send(html);
   });
@@ -226,7 +226,7 @@ app.get('/search', auth, (req, res) => {
   res.render('pages/search', (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the search page.');
+      return res.send(500, 'An error occurred while rendering the search page.');
     }
     res.send(html);
   });
@@ -235,7 +235,7 @@ app.get('/search', auth, (req, res) => {
 // Catch-all error endpoint
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Something went wrong!');
+  res.send(500, 'Something went wrong!');
 });
 
 // -------------------------------------  START THE SERVER   ----------------------------------------------
