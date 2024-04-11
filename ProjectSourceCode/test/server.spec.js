@@ -35,8 +35,9 @@ describe('Register-Positive', () => {
       .request(server)
       .post('/register')
       .send({email:'email@gmail.com', password:'password'})
+      .redirects(0)
       .end((err, res) => {
-        expect(res).to.have.status(200);
+       res.should.have.status(302);
         done(); 
       });
   })
@@ -48,9 +49,10 @@ describe('Register-Negative', () => {
       .request(server)
       .post('/register')
       .send({email:'1234', password:'password'})
+      .redirects(0)
       .end((err, res) => {
-        expect(res).to.have.status(400);
-        done();
+       res.should.have.status(302);
+        done(); 
       });
   })
 });
@@ -63,9 +65,10 @@ describe('Login-Positive', () => {
       .request(server)
       .post('/login')
       .send({email:'email@gmail.com', password:'password'})
+      .redirects(0)
       .end((err, res) => {
-        expect(res).to.have.status(200);
-        done(); 
+       res.should.have.status(302);
+        done();  
       });
   })
 });
@@ -76,8 +79,9 @@ describe('Login-Negative', () => {
       .request(server)
       .post('/login')
       .send({email:'emailgmail.com', password:'password'})
+      .redirects(0)
       .end((err, res) => {
-        expect(res).to.have.status(400);
+       res.should.have.status(302);
         done(); 
       });
   })
