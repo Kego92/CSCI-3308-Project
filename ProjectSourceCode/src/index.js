@@ -100,7 +100,9 @@ app.get('/logout', (req, res) => {
 //Any actual search functionality will be relegated to 
 app.get('/search', (req, res) => {
   res.render('pages/search');
-})
+});
+
+
 
 //This is the post method, which is called when you click the "search" button
 //It passes the searched string into a call to the API, which returns a list of stocks and their info
