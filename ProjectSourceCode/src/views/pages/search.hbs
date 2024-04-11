@@ -2,9 +2,9 @@
 <body>
     <!--This form contains the search bar.
         The text typed into it is passed to the post /search method when the button is clicked.-->
-    <form>
+    <form action="/search" method="post">
         <label for="search-bar">Search</label>
-        <input id="search-bar" type="text">
+        <input id="search-bar" name="input" type="text">
         <button type="submit">Search</button>
     </form>
 
@@ -15,35 +15,17 @@
         The symbol goes in the head, the name in the body
         There will also be a button at the right end of each card that will add that stock to the user's favorite list-->
     <div>
+        {{#each searched_stock.results}}
         <div class="card">
             <div clas="card-body">
                 <h5 class="card-title">
-                    Sample
+                    {{this.ticker}}
                 </h5>
                 <p class="card-text">
-                    Sample
+                    {{this.name}}
                 </p>
             </div>
         </div>
-        <div class="card">
-            <div clas="card-body">
-                <h5 class="card-title">
-                    Sample
-                </h5>
-                <p class="card-text">
-                    Sample
-                </p>
-            </div>
-        </div>
-        <div class="card">
-            <div clas="card-body">
-                <h5 class="card-title">
-                    Sample
-                </h5>
-                <p class="card-text">
-                    Sample
-                </p>
-            </div>
-        </div>
+        {{/each}}
     </div>
 </body>

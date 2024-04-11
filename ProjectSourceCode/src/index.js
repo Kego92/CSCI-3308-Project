@@ -6,7 +6,8 @@ const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
-
+//I've added in axios here to make my API call
+const axios = require('axios');
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
@@ -100,6 +101,37 @@ app.get('/logout', (req, res) => {
 app.get('/search', (req, res) => {
   res.render('pages/search');
 })
+
+//This is the post method, which is called when you click the "search" button
+//It passes the searched string into a call to the API, which returns a list of stocks and their info
+//We then render the page again, passing that info to build cards for each searched stock.
+app.post('/search', (req, res) =>{
+  var searched_stock = [0, 1, 2];
+  //Here's the 
+  axios({
+    url: `https://api.polygon.io/v3/reference/tickers`,
+    method: 'GET',
+    dataType: 'json',
+    headers: {
+      //This header includes the API key
+      //Will it break the minute the code moves setups? Who knows.
+      'Authorization': 'Bearer FSgRaU3KnQzDdptepqG3L8Jf_k3jsLzw',
+    },
+    params: {
+      search: req.body.input,
+      limit: 20,
+    }
+  })
+    .then(results => {
+      console.log(results.data); // the results will be displayed on the terminal if the docker containers are running // Send some parameters
+      searched_stock = results.data;
+      res.render('pages/search', {searched_stock});
+    })
+    .catch(error => {
+      res.render('pages/search');
+    });
+
+});
 
 // -------------------------------------  START THE SERVER   ----------------------------------------------
 module.exports = app.listen(3000);
