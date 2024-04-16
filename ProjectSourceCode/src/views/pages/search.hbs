@@ -1,1 +1,34 @@
-<!--TODO: Create layout to display dynamic content from search bar-->
+<!DOCTYPE html>
+<body>
+    <!--This form contains the search bar.
+        The text typed into it is passed to the post /search method when the button is clicked.-->
+    <form action="/search" method="post">
+        <label for="search-bar">Search</label>
+        <!--This is the input text boxt. req.body.input is used in the axios call to the API-->
+        <input id="search-bar" name="input" type="text">
+        <button type="submit">Search</button>
+    </form>
+
+    <h3>Results</h3>
+    <!--Down here is where, if any, the results of the search will show up
+        An array of stock info is passed to the partial, which is then processed here
+        putting each stock's symbol and company name into a card
+        The symbol goes in the head, the name in the body
+        There will also be a button at the right end of each card that will add that stock to the user's favorite list-->
+    <div>
+        <!--The code takes in a "searched_stock" object from the post method, then for each "result" in it, makes a card
+        Each result has a ticker and name, which are used for the title and body of the card respectively-->
+        {{#each searched_stock.results}}
+        <div class="card">
+            <div clas="card-body">
+                <h5 class="card-title">
+                    {{this.ticker}}
+                </h5>
+                <p class="card-text">
+                    {{this.name}}
+                </p>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</body>
