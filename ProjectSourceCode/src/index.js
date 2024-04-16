@@ -261,8 +261,32 @@ app.post('/search', (req, res) =>{
       if (results.data)
       {
         //I print it out immediately to make things easier to visualize on my end.
-        console.log(results.data);
-        searched_stock = results.data;
+        //console.log(results.data);
+        let searched_stock = [];
+        //results.data.results is an array of dictionaries with stock info
+        //we make our own variable, searched_stock, which copies the ticker and name from it
+        //then we add a third variable that tracks whether or not a stock is in the user's favorites or not.
+        for (let curr of results.data.results)
+        {
+          let query = `SELECT * FROM users_to_favorite_stocks WHERE user_id = '${req.session.user.user_id}' AND stock_ticker = '${curr.ticker}';`;
+          let in_favorites = false;
+          db.any(query)
+            .then(data => {
+              if (data)
+              {
+                in_favorites = true;
+              }
+            });
+          console.log('HERE');
+          searched_stock.push(
+            {
+              'ticker':`${curr.ticker}`,
+              'name':curr.name,
+              'favorite':in_favorites
+            }
+          )
+        }
+        console.log(searched_stock)
         //Once we have our results, we render the page again while passing the results to search.hbs
         //Within that file, there's a mechanism to build cards from whatever is put in.
         res.render('pages/search', {searched_stock});

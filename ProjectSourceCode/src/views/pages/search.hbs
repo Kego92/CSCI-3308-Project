@@ -16,9 +16,10 @@
         The symbol goes in the head, the name in the body
         There will also be a button at the right end of each card that will add that stock to the user's favorite list-->
     <div>
-        <!--The code takes in a "searched_stock" object from the post method, then for each "result" in it, makes a card
-        Each result has a ticker and name, which are used for the title and body of the card respectively-->
-        {{#each searched_stock.results}}
+        <!--The code takes in a "searched_stock" array from the post method, then for each dictionary in it, makes a card
+        Each dictionary has a ticker and name, which are used for the title and body of the card respectively
+        Each dictionary also has a value which determines whether or not it's in the current user's favorites-->
+        {{#each searched_stock}}
         <div class="card">
             <div clas="card-body">
                 <h5 class="card-title">
@@ -27,6 +28,15 @@
                 <p class="card-text">
                     {{this.name}}
                 </p>
+                <!--This will render on the card if the stock is in the favorites
+                As such, it represents the "remove from favorites" button-->
+                {{#if this.favorite}}
+                <button></button>
+                <!--This will render on the card if the stock is not in the favorites
+                As such, it represents the "add to favorites" button--> 
+                {{else}}
+
+                {{/if}}
             </div>
         </div>
         {{/each}}

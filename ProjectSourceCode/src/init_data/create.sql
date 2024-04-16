@@ -26,9 +26,8 @@ When a user adds a stock to their favorites, a row is added to this list, and vi
 DROP TABLE IF EXISTS users_to_favorite_stocks CASCADE;
 CREATE TABLE IF NOT EXISTS users_to_favorite_stocks (
     user_id INT NOT NULL,
-    stock_id INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    FOREIGN KEY (stock_id) REFERENCES stocks (stock_id) ON DELETE CASCADE
+    stock_ticker VARCHAR(15) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
 
 
@@ -42,6 +41,6 @@ CREATE TABLE IF NOT EXISTS users_to_portfolio_stocks (
     user_id INT NOT NULL,
     --I've changed stock ID to stock_ticker since the stocks table is actually redundant
     stock_ticker INT NOT NULL,
-    shares_owned INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    shares_owned VARCHAR(15) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
