@@ -6,8 +6,10 @@ const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
-//I've added in axios here to make my API call
+const bcrypt = require('bcrypt');
 const axios = require('axios');
+var validator = require('validator');
+
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
@@ -22,6 +24,7 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json());
+app.use(express.static(__dirname + '/resources'));
 // set Session
 app.use(
   session({
@@ -57,52 +60,180 @@ db.connect()
     console.log('ERROR', error.message || error);
   });
 
+
+// Authentication middleware.
+const auth = (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect(`/login?error=${encodeURIComponent('You must be logged in to access this feature')}`);
+  }
+  next();
+};
+
 // ------------------------------------------  ROUTES  --------------------------------------------
+
+app.get('/', auth, (req, res) => {
+  res.render('pages/home', {}, (err, html) => {
+    if (err) {
+      console.error('Render error:', err);
+      return res.send(500, 'An error occurred while rendering the home page.');
+    }
+    res.send(html);
+  });
+});
 
 app.get('/welcome', (req, res) => {
   res.json({status: 'success', message: 'Welcome!'});
 });
 
 app.get('/login', (req, res) => {
-  res.render('pages/login',{});
+  const errorMessage = req.query.error ? decodeURIComponent(req.query.error) : null;
+
+  res.render('pages/login', { error: errorMessage }, (err, html) => {
+    if (err) {
+      console.error('Render error:', err);
+      return res.send(500, 'An error occurred while rendering the login page.');
+    }
+    res.send(html);
+  });
 });
 
-app.post('/login', (req, res) => {
-  const email = req.body.email;
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
   const query = 'select * from users where users.email = $1 LIMIT 1';
   const values = [email];
 
-  // get the user_id based on the emailid
-  db.one(query, values)
-    .then(data => {
-      user.user_id = data.user_id;
-      user.email = data.email;
+  if (!email && !password) {
+    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
+  }
 
-      req.session.user = user;
+  if (!email) {
+    return res.redirect(`/login?error=${encodeURIComponent('Email is required')}`);
+  }
+
+  if (!password) {
+    return res.redirect(`/login?error=${encodeURIComponent('Password is required')}`);
+  }
+
+  const validEmail = validator.isEmail(email); 
+  if (!validEmail)
+  {
+    return res.redirect(`/register?error=${encodeURIComponent('Valid email is required')}`);
+  }
+
+  try {
+    const user = await db.one(query, values);
+
+    if (user && await bcrypt.compare(password, user.password)) {
+      req.session.user = { user_id: user.user_id, email: user.email };
       req.session.save();
 
-      res.redirect('/');
-    })
-    .catch(err => {
-      console.log(err);
-      res.redirect('/login');
-    });
+      res.redirect('/favorites');
+    } else {
+      return res.redirect(`/login?error=${encodeURIComponent('Password is incorrect')}`);
+    }
+  } catch (err) {
+    return res.redirect(`/login?error=${encodeURIComponent('ERROR: User not found')}`);
+  }
+});
+
+// GET route for the registration page
+app.get('/register', (req, res) => {
+  const errorMessage = req.query.error ? decodeURIComponent(req.query.error) : null;
+
+  res.render('pages/register', { error: errorMessage }, (err, html) => {
+    if (err) {
+      console.error('Render error:', err);
+      return res.send(500, 'An error occurred while rendering the register page.');
+    }
+    res.send(html);
+  });
+});
+
+app.post('/register', async (req, res) => {
+  //hash the password using bcrypt library
+  const hash = await bcrypt.hash(req.body.password, 10);
+
+  if (!req.body.email && !req.body.password) {
+    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
+  }
+
+  if (!req.body.password) {
+    return res.redirect(`/register?error=${encodeURIComponent('Password is required')}`);
+  }
+
+  if (!req.body.email)
+  {
+    return res.redirect(`/register?error=${encodeURIComponent('Email is required')}`);
+  }
+
+  const validEmail = validator.isEmail(req.body.email); 
+  if (!validEmail)
+  {
+    return res.redirect(`/register?error=${encodeURIComponent('Valid email is required')}`);
+  }
+
+  // To-DO: Insert username and hashed password into the 'users' table
+  const query = `insert into users (email, password) values ('${req.body.email}', '${hash}');`;
+  
+  db.task('get-everything', task => {
+    return task.batch([task.any(query)]);
+  })
+
+  .then(data => {
+    res.redirect('/login');
+  })
+
+
+  .catch(err => {
+    res.redirect('/register');
+  })
 });
 
 // logout endpoint
-app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.render('pages/logout');
+app.get('/logout', auth, (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Session destruction error:', err);
+      return res.send(500, 'Error logging out');
+    }
+    // Clear client side cookies
+    res.clearCookie('connect.sid');
+    res.render('pages/logout');
+  });
 });
 
-
-//This is the get endpoint for search. All it does is render the website by itself
-//Any actual search functionality will be relegated to 
-app.get('/search', (req, res) => {
-  res.render('pages/search');
+// GET favorites
+app.get('/favorites', auth, (req, res) => {
+  res.render('pages/favorites', (err, html) => {
+    if (err) {
+      console.error('Render error:', err);
+      return res.send(500, 'An error occurred while rendering the favorites page.');
+    }
+    res.send(html);
+  });
 });
 
+// GET portfolio
+app.get('/portfolio', auth, (req, res) => {
+  res.render('pages/portfolio', (err, html) => {
+    if (err) {
+      console.error('Render error:', err);
+      return res.send(500, 'An error occurred while rendering the portfolio page.');
+    }
+    res.send(html);
+  });
+});
 
+// GET search
+app.get('/search', auth, (req, res) => {
+  res.render('pages/search', (err, html) => {
+    if (err) {
+      console.error('Render error:', err);
+      return res.send(500, 'An error occurred while rendering the search page.');
+    }
+    res.send(html);
+  });
+});
 
 //This is the post method, which is called when you click the "search" button
 //It passes the searched string into a call to the API, which returns a list of stocks and their info
@@ -148,6 +279,12 @@ app.post('/search', (req, res) =>{
       res.render('pages/search');
     });
 
+});
+
+// Catch-all error endpoint
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.send(500, 'Something went wrong!');
 });
 
 // -------------------------------------  START THE SERVER   ----------------------------------------------
