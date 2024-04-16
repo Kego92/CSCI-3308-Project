@@ -1,0 +1,3 @@
+- Caught up on changes (implemented endpoints, search)
+- We need release notes
+- Next week our plan is to finish API functionality and graphs

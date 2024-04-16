@@ -3,11 +3,11 @@ This is the list of users. Their IDs, emails, and passwords are shared.
 I'm gonna assume we're probably gonna copy the registration system from lab 8,
 in which case, the password value here is going to be a hash and not a direct copy.
 */
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
-    email VARCHAR(50) NOT NULL,
-    password VARCHAR(50) NOT NULL
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(100) NOT NULL
 );
 
 /*
