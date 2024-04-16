@@ -26,13 +26,17 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/resources'));
 // set Session
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    saveUninitialized: true,
-    resave: true,
-  })
-);
+app.use(session({
+  secret: process.env.SESSION_SECRET, 
+  saveUninitialized: false,           
+  resave: false,                      
+  cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'false',
+      sameSite: 'lax'
+  }
+}));
+
 app.use(
   bodyParser.urlencoded({
     extended: true,
@@ -63,6 +67,8 @@ db.connect()
 
 // Authentication middleware.
 const auth = (req, res, next) => {
+  console.log('Session ID:', req.sessionID);
+  console.log('Session Data:', req.session.user);
   if (!req.session.user) {
     return res.redirect(`/login?error=${encodeURIComponent('You must be logged in to access this feature')}`);
   }
@@ -71,7 +77,7 @@ const auth = (req, res, next) => {
 
 // ------------------------------------------  ROUTES  --------------------------------------------
 
-app.get('/', auth, (req, res) => {
+app.get('/home', auth, (req, res) => {
   res.render('pages/home', {}, (err, html) => {
     if (err) {
       console.error('Render error:', err);
@@ -123,11 +129,16 @@ app.post('/login', async (req, res) => {
   try {
     const user = await db.one(query, values);
 
-    if (user && await bcrypt.compare(password, user.password)) {
+    
+    if (user && user.password === password) // (user && await bcrypt.compare(password, user.password)) 
+    {
       req.session.user = { user_id: user.user_id, email: user.email };
-      req.session.save();
-
-      res.redirect('/favorites');
+      req.session.save(err => {
+      if (err) {
+        console.log('Session save error:', err);
+      }
+        res.redirect('/favorites');
+      });
     } else {
       return res.redirect(`/login?error=${encodeURIComponent('Password is incorrect')}`);
     }
@@ -154,7 +165,7 @@ app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
 
   if (!req.body.email && !req.body.password) {
-    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
+    return res.redirect(`/register?error=${encodeURIComponent('Email and password are required')}`);
   }
 
   if (!req.body.password) {
@@ -185,7 +196,7 @@ app.post('/register', async (req, res) => {
 
 
   .catch(err => {
-    res.redirect('/register');
+    res.redirect(`/register?error=${encodeURIComponent('There was an error registering your account')}`);
   })
 });
 
@@ -202,16 +213,37 @@ app.get('/logout', auth, (req, res) => {
   });
 });
 
-// GET favorites
-app.get('/favorites', auth, (req, res) => {
-  res.render('pages/favorites', (err, html) => {
-    if (err) {
-      console.error('Render error:', err);
-      return res.send(500, 'An error occurred while rendering the favorites page.');
-    }
-    res.send(html);
-  });
+app.get('/favorites', auth, async (req, res) => {
+  try {
+    const query = `
+      SELECT stocks.ticker_symbol
+      FROM stocks
+      JOIN users_to_favorite_stocks ON stocks.stock_id = users_to_favorite_stocks.stock_id
+      WHERE users_to_favorite_stocks.user_id = $1;
+    `;
+
+    console.log("uid:", req.session.user.user_id);
+
+    const result = await db.query(query, [req.session.user.user_id]);
+
+    console.log("result:", result);
+
+    const favoritesData = result && result.length > 0
+      ? result.map(stock => ({
+          tickerSymbol: stock.ticker_symbol
+        }))
+      : [];
+
+    console.log("favdata:",favoritesData);
+
+    res.render('pages/favorites', { favorite: favoritesData });
+  } catch (err) {
+    console.error('Error fetching favorites:', err);
+    res.status(500).send('An error occurred while fetching the favorites.');
+  }
 });
+
+
 
 // GET portfolio
 app.get('/portfolio', auth, (req, res) => {

@@ -43,5 +43,5 @@ CREATE TABLE IF NOT EXISTS users_to_portfolio_stocks (
     --I've changed stock ID to stock_ticker since the stocks table is actually redundant
     stock_ticker INT NOT NULL,
     shares_owned INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
