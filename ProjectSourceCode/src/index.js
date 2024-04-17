@@ -7,6 +7,7 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const axios = require('axios');
 var validator = require('validator');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
@@ -25,13 +26,17 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/resources'));
 // set Session
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    saveUninitialized: true,
-    resave: true,
-  })
-);
+app.use(session({
+  secret: process.env.SESSION_SECRET, 
+  saveUninitialized: false,           
+  resave: false,                      
+  cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'false',
+      sameSite: 'lax'
+  }
+}));
+
 app.use(
   bodyParser.urlencoded({
     extended: true,
@@ -62,6 +67,8 @@ db.connect()
 
 // Authentication middleware.
 const auth = (req, res, next) => {
+  console.log('Session ID:', req.sessionID);
+  console.log('Session Data:', req.session.user);
   if (!req.session.user) {
     return res.redirect(`/login?error=${encodeURIComponent('You must be logged in to access this feature')}`);
   }
@@ -70,7 +77,7 @@ const auth = (req, res, next) => {
 
 // ------------------------------------------  ROUTES  --------------------------------------------
 
-app.get('/', auth, (req, res) => {
+app.get('/home', auth, (req, res) => {
   res.render('pages/home', {}, (err, html) => {
     if (err) {
       console.error('Render error:', err);
@@ -122,11 +129,16 @@ app.post('/login', async (req, res) => {
   try {
     const user = await db.one(query, values);
 
-    if (user && await bcrypt.compare(password, user.password)) {
+    
+    if (user && user.password === password) // (user && await bcrypt.compare(password, user.password)) 
+    {
       req.session.user = { user_id: user.user_id, email: user.email };
-      req.session.save();
-
-      res.redirect('/favorites');
+      req.session.save(err => {
+      if (err) {
+        console.log('Session save error:', err);
+      }
+        res.redirect('/favorites');
+      });
     } else {
       return res.redirect(`/login?error=${encodeURIComponent('Password is incorrect')}`);
     }
@@ -153,7 +165,7 @@ app.post('/register', async (req, res) => {
   const hash = await bcrypt.hash(req.body.password, 10);
 
   if (!req.body.email && !req.body.password) {
-    return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
+    return res.redirect(`/register?error=${encodeURIComponent('Email and password are required')}`);
   }
 
   if (!req.body.password) {
@@ -184,7 +196,7 @@ app.post('/register', async (req, res) => {
 
 
   .catch(err => {
-    res.redirect('/register');
+    res.redirect(`/register?error=${encodeURIComponent('There was an error registering your account')}`);
   })
 });
 
@@ -201,16 +213,37 @@ app.get('/logout', auth, (req, res) => {
   });
 });
 
-// GET favorites
-app.get('/favorites', auth, (req, res) => {
-  res.render('pages/favorites', (err, html) => {
-    if (err) {
-      console.error('Render error:', err);
-      return res.send(500, 'An error occurred while rendering the favorites page.');
-    }
-    res.send(html);
-  });
+app.get('/favorites', auth, async (req, res) => {
+  try {
+    const query = `
+      SELECT stocks.ticker_symbol
+      FROM stocks
+      JOIN users_to_favorite_stocks ON stocks.stock_id = users_to_favorite_stocks.stock_id
+      WHERE users_to_favorite_stocks.user_id = $1;
+    `;
+
+    console.log("uid:", req.session.user.user_id);
+
+    const result = await db.query(query, [req.session.user.user_id]);
+
+    console.log("result:", result);
+
+    const favoritesData = result && result.length > 0
+      ? result.map(stock => ({
+          tickerSymbol: stock.ticker_symbol
+        }))
+      : [];
+
+    console.log("favdata:",favoritesData);
+
+    res.render('pages/favorites', { favorite: favoritesData });
+  } catch (err) {
+    console.error('Error fetching favorites:', err);
+    res.status(500).send('An error occurred while fetching the favorites.');
+  }
 });
+
+
 
 // GET portfolio
 app.get('/portfolio', auth, (req, res) => {
@@ -232,6 +265,52 @@ app.get('/search', auth, (req, res) => {
     }
     res.send(html);
   });
+});
+
+//This is the post method, which is called when you click the "search" button
+//It passes the searched string into a call to the API, which returns a list of stocks and their info
+//We then render the page again, passing that info to build cards for each searched stock.
+app.post('/search', (req, res) =>{
+  //Here's the axios call to the API. This is where we actually get the searched stocks
+  axios({
+    url: `https://api.polygon.io/v3/reference/tickers`,
+    method: 'GET',
+    dataType: 'json',
+    headers: {
+      //This header includes the API key
+      //Will it break the minute the code moves setups? Who knows.
+      'Authorization': 'Bearer FSgRaU3KnQzDdptepqG3L8Jf_k3jsLzw',
+    },
+    params: {
+      //The search parameter contains the actual text inputted for the search.
+      search: req.body.input,
+      //The limit parameter is set to 20 so our results aren't a million billion things long
+      limit: 20,
+    }
+  })
+    .then(results => {
+      //Checking if there are any results to begin with
+      if (results.data)
+      {
+        //I print it out immediately to make things easier to visualize on my end.
+        console.log(results.data);
+        searched_stock = results.data;
+        //Once we have our results, we render the page again while passing the results to search.hbs
+        //Within that file, there's a mechanism to build cards from whatever is put in.
+        res.render('pages/search', {searched_stock});
+      }
+      else
+      {
+        //if an error wasn't returned but there are still no results, we go here.
+        //I suppose you could maybe put in a "no results found" thing for this?
+        res.render('pages/search');
+      }
+    })
+    .catch(error => {
+      //I don't have a rigurous error procedure yet. Once I go back and look at testing stuff I'll see what I can do.
+      res.render('pages/search');
+    });
+
 });
 
 // Catch-all error endpoint
