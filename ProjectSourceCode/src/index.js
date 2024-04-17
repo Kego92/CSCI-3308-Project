@@ -7,6 +7,7 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+var validator = require('validator');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -22,6 +23,7 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json());
+app.use(express.static(__dirname + '/resources'));
 // set Session
 app.use(
   session({
@@ -72,7 +74,7 @@ app.get('/', auth, (req, res) => {
   res.render('pages/home', {}, (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the home page.');
+      return res.send(500, 'An error occurred while rendering the home page.');
     }
     res.send(html);
   });
@@ -88,7 +90,7 @@ app.get('/login', (req, res) => {
   res.render('pages/login', { error: errorMessage }, (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the login page.');
+      return res.send(500, 'An error occurred while rendering the login page.');
     }
     res.send(html);
   });
@@ -109,6 +111,12 @@ app.post('/login', async (req, res) => {
 
   if (!password) {
     return res.redirect(`/login?error=${encodeURIComponent('Password is required')}`);
+  }
+
+  const validEmail = validator.isEmail(email); 
+  if (!validEmail)
+  {
+    return res.redirect(`/register?error=${encodeURIComponent('Valid email is required')}`);
   }
 
   try {
@@ -134,42 +142,50 @@ app.get('/register', (req, res) => {
   res.render('pages/register', { error: errorMessage }, (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the register page.');
+      return res.send(500, 'An error occurred while rendering the register page.');
     }
     res.send(html);
   });
 });
 
 app.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  //hash the password using bcrypt library
+  const hash = await bcrypt.hash(req.body.password, 10);
 
-  if (!email && !password) {
-    console.error('Error: Email and password are required');
+  if (!req.body.email && !req.body.password) {
     return res.redirect(`/login?error=${encodeURIComponent('Email and password are required')}`);
   }
 
-  if (!email) {
-    console.error('Error: Email is required');
-    return res.redirect(`/register?error=${encodeURIComponent('Email is required')}`);
-  }
-
-  if (!password) {
-    console.error('Error: Password is required');
+  if (!req.body.password) {
     return res.redirect(`/register?error=${encodeURIComponent('Password is required')}`);
   }
 
-  try {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const user = await db.one(
-      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
-      [email, hashedPassword]
-    );
-    res.redirect('/login');
-  } catch (error) {
-    console.error('Registration error:', error);
-    return res.redirect(`/register?error=${encodeURIComponent('There was an issue registering your account')}`);
+  if (!req.body.email)
+  {
+    return res.redirect(`/register?error=${encodeURIComponent('Email is required')}`);
   }
+
+  const validEmail = validator.isEmail(req.body.email); 
+  if (!validEmail)
+  {
+    return res.redirect(`/register?error=${encodeURIComponent('Valid email is required')}`);
+  }
+
+  // To-DO: Insert username and hashed password into the 'users' table
+  const query = `insert into users (email, password) values ('${req.body.email}', '${hash}');`;
+  
+  db.task('get-everything', task => {
+    return task.batch([task.any(query)]);
+  })
+
+  .then(data => {
+    res.redirect('/login');
+  })
+
+
+  .catch(err => {
+    res.redirect('/register');
+  })
 });
 
 // logout endpoint
@@ -177,7 +193,7 @@ app.get('/logout', auth, (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Session destruction error:', err);
-      return res.status(500).send('Error logging out');
+      return res.send(500, 'Error logging out');
     }
     // Clear client side cookies
     res.clearCookie('connect.sid');
@@ -190,7 +206,7 @@ app.get('/favorites', auth, (req, res) => {
   res.render('pages/favorites', (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the favorites page.');
+      return res.send(500, 'An error occurred while rendering the favorites page.');
     }
     res.send(html);
   });
@@ -201,7 +217,7 @@ app.get('/portfolio', auth, (req, res) => {
   res.render('pages/portfolio', (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the portfolio page.');
+      return res.send(500, 'An error occurred while rendering the portfolio page.');
     }
     res.send(html);
   });
@@ -212,7 +228,7 @@ app.get('/search', auth, (req, res) => {
   res.render('pages/search', (err, html) => {
     if (err) {
       console.error('Render error:', err);
-      return res.status(500).send('An error occurred while rendering the search page.');
+      return res.send(500, 'An error occurred while rendering the search page.');
     }
     res.send(html);
   });
@@ -221,7 +237,7 @@ app.get('/search', auth, (req, res) => {
 // Catch-all error endpoint
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Something went wrong!');
+  res.send(500, 'Something went wrong!');
 });
 
 // -------------------------------------  START THE SERVER   ----------------------------------------------

@@ -29,4 +29,60 @@ describe('Server!', () => {
 
 // *********************** TODO: WRITE 2 UNIT TESTCASES **************************
 
-// ********************************************************************************
+describe('Register-Positive', () => {
+  it('Positive: /register', done => {
+    chai
+      .request(server)
+      .post('/register')
+      .send({email:'email@gmail.com', password:'password'})
+      .redirects(0)
+      .end((err, res) => {
+       res.should.have.status(302);
+        done(); 
+      });
+  })
+});
+
+describe('Register-Negative', () => {
+  it('Negative: /register', done => {
+    chai
+      .request(server)
+      .post('/register')
+      .send({email:'1234', password:'password'})
+      .redirects(0)
+      .end((err, res) => {
+       res.should.have.status(302);
+        done(); 
+      });
+  })
+});
+
+// ***************************** TESTING LOGIN ***********************************
+
+describe('Login-Positive', () => {
+  it('Positive: /login', done => {
+    chai
+      .request(server)
+      .post('/login')
+      .send({email:'email@gmail.com', password:'password'})
+      .redirects(0)
+      .end((err, res) => {
+       res.should.have.status(302);
+        done();  
+      });
+  })
+});
+
+describe('Login-Negative', () => {
+  it('Negative: /login', done => {
+    chai
+      .request(server)
+      .post('/login')
+      .send({email:'emailgmail.com', password:'password'})
+      .redirects(0)
+      .end((err, res) => {
+       res.should.have.status(302);
+        done(); 
+      });
+  })
+});

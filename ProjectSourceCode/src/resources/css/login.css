@@ -1,5 +1,3 @@
-
-
 /* Color Theme Swatches in Hex */
 .Abstract-Finance-1-hex { color: #163840; }
 .Abstract-Finance-2-hex { color: #346773; }
@@ -11,12 +9,6 @@ body {
     background-color: #163840 !important;
 }
 
-.navbar {
-    opacity: 60%;
-    color: #50BF80;
-}
-
-.nav-link {
+.form-text {
     color: #85F2A0;
 }
-
