@@ -246,8 +246,119 @@ app.get('/favorites', auth, async (req, res) => {
 
 
 // GET portfolio
-app.get('/portfolio', auth, (req, res) => {
-  res.render('pages/portfolio', (err, html) => {
+app.get('/portfolio', auth, async (req, res) => {
+  let v = 20;
+
+  //to start, we'll set up our axis
+  //our x axis is time. We'll get today's date, then go back two days at a time 7 times.
+  //new Date generates an object with today's date and time
+
+  let today = new Date();
+  //today = today.getUTCDate();
+  //console.log("THE DATE IS");
+  //console.log(today);
+  //document.getElementById("demo").innerHTML = today.toUTCString();
+
+  //now we'll make 2 arrays
+  //one has the time values, and is passed to the API for data
+  //the other has time strings, and is used to label the graph
+  let timeValues = [];
+  let timeStrings = [];
+
+  for (let i = 0; i < 4; i++)
+  {
+    let dayOfMonth = today.getDate();
+    let exDate = new Date();
+    exDate.setDate(dayOfMonth - 4 + i);
+    timeValues.push(exDate);
+    //this gets a yyyy-mm-dd string, which we need to query the API
+    timeStrings.push(exDate.toISOString().split('T')[0]);
+  }
+  for (let i=0; i < 4; i++)
+  {
+    console.log(timeStrings[i]);
+  }
+  //Now we'll assemble the portfolio into 2 arrays, one representing ticker symbols and the other shares owned
+  let portTickers = [];
+  let portShares = [];
+
+  console.log("user id is ", req.session.user.user_id);
+  const result = await db.any(`SELECT stock_ticker, shares_owned FROM users_to_portfolio_stocks WHERE user_id = ${req.session.user.user_id}`);
+
+  console.log("result: ", result);
+
+  let num_of_results = result.length;
+  for (let i = 0; i < num_of_results; i++)
+  {
+    portTickers.push(result[i].stock_ticker);
+    console.log(portTickers[i]);
+    portShares.push(result[i].shares_owned);
+    console.log(portShares[i]);
+  }
+  
+  //now that we have the contents of the user's portfolio in order, we'll get our data points
+  //at each given date in timeValues, we'll query the API for each of our stocks to get the price of that stock at that date
+  //Then, we'll multiply the values returned by the shares owned for those stocks and sum them up
+
+  let yesterday_sum = 0;
+  let db_yesterday_sum = 0;
+  let db_db_yesterday_sum = 0;
+ 
+  let tickerConcat = portTickers[0];
+  for (let i = 1; i < num_of_results; i++)
+  {
+    tickerConcat += ','
+    tickerConcat += portTickers[i];
+  }
+
+  console.log(tickerConcat);
+  
+  const result_2 = await axios({
+      url: `http://api.marketstack.com/v1/eod`,
+      method: `GET`,
+      dataType: `json`,
+      headers: {},
+      params: {
+      access_key: `33b6822b22ee82763a83ffddb98acaf5`,
+      symbols: tickerConcat,
+      date_from: timeStrings[0],
+      date_to: timeStrings[3],
+  }});
+  
+  let datasize = result_2.data.data.length;
+  for (let i = 0; i < datasize; i++)
+  {
+    tickIndex = i % num_of_results;
+    if (result_2.data.data[i].date.split('T')[0] == timeStrings[1])
+    {
+      db_db_yesterday_sum += portShares[tickIndex] * result_2.data.data[i].close;
+      console.log("THIS IS FROM 3 DAYS AGO");
+      console.log(`WE HAVE ${portShares[tickIndex]} OF THESE SHARES THAT COSTED ${result_2.data.data[i].close}`);
+      console.log(`${portShares[tickIndex] * result_2.data.data[i].close} IS ADDED`);
+
+    }
+    else if (result_2.data.data[i].date.split('T')[0] == timeStrings[2])
+    {
+      db_yesterday_sum += portShares[tickIndex] * result_2.data.data[i].close;
+      console.log("THIS IS FROM 2 DAYS AGO");
+      console.log(`WE HAVE ${portShares[tickIndex]} OF THESE SHARES THAT COSTED ${result_2.data.data[i].close}`);
+      console.log(`${portShares[tickIndex] * result_2.data.data[i].close} IS ADDED`);
+    }
+    else if (result_2.data.data[i].date.split('T')[0] == timeStrings[3])
+    {
+      yesterday_sum += portShares[tickIndex] * result_2.data.data[i].close;
+      console.log("THIS IS FROM 1 DAY AGO");
+      console.log(`WE HAVE ${portShares[tickIndex]} OF THESE SHARES THAT COSTED ${result_2.data.data[i].close}`);
+      console.log(`${portShares[tickIndex] * result_2.data.data[i].close} IS ADDED`);
+    }
+    console.log(result_2.data.data[i]);
+  }
+  console.log("HERE ARE OUR SUMS");
+  console.log(yesterday_sum);
+  console.log(db_yesterday_sum);
+  console.log(db_db_yesterday_sum);
+
+  res.render('pages/portfolio', {db_db_yesterday_sum, db_yesterday_sum, yesterday_sum}, (err, html) => {
     if (err) {
       console.error('Render error:', err);
       return res.send(500, 'An error occurred while rendering the portfolio page.');
@@ -255,6 +366,8 @@ app.get('/portfolio', auth, (req, res) => {
     res.send(html);
   });
 });
+  
+  
 
 // GET search
 app.get('/search', auth, (req, res) => {
