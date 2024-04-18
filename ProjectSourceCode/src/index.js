@@ -49,6 +49,17 @@ const dbConfig = {
 };
 const db = pgp(dbConfig);
 
+const prodDbConfig = {
+  host: process.env.host,
+  port: 5432,
+  database: process.env.POSTGRES_DB,
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+};
+
+// const db = pgp(prodDbConfig); // Use this for hosting instead of line 50
+
+
 // db test
 db.connect()
   .then(obj => {
