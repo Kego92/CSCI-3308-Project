@@ -16,15 +16,16 @@ Eli Jordan
 
 ## Tech Stack
 HTML, CSS, JS for frontend.
-NodeJS for API calls to stockmarket API.
+NodeJS for API calls to Polygon API.
 PostgreSQL for database.
 Handlebars for templating.
 
 ## Prerequisites
 Docker
+NPM
 
 ## How to Run Tests
-Coming soon!
+Tests are automatically ran with 'docker compose up'!
 
 ## Link to Deployed App
 Coming soon!
