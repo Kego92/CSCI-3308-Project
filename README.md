@@ -24,6 +24,12 @@ Handlebars for templating.
 Docker
 NPM
 
+## How to run the app locally
+1. Open Docker
+2. Open ProjectSourceCode Folder in terminal
+3. Execute 'docker compose up'
+4. In web browser go to http://localhost:3000/
+
 ## How to Run Tests
 Tests are automatically ran with 'docker compose up'!
 
