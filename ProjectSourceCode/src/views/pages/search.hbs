@@ -33,7 +33,7 @@
                 </p>
                 <!-- Favorite Button -->
                 <button class="favorite-button" onclick="toggleFavorite(this, '{{this.ticker}}')">
-                    <i class="far fa-star"></i> <!-- Empty star by default -->
+                    <i class="{{#if this.isFavorited}}fas{{else}}far{{/if}} fa-star"></i> <!-- Star will hopefully reflect current state -->
                 </button>
             </div>
         </div>
@@ -41,25 +41,30 @@
     </div>
 
     <script>
-    function toggleFavorite(button, ticker) {
-        const icon = button.querySelector('i');
-        icon.classList.toggle('fas');
-        icon.classList.toggle('far');
+        function toggleFavorite(button, ticker) 
+        {
+            const icon = button.querySelector('i');
+            const currentFavorite = icon.classList.contains('fas');
 
-        // Example of sending a POST request to update the favorite status
-        fetch(`/favorite/${ticker}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if(data.isFavorited) {
-                icon.classList.add('fas');
-                icon.classList.remove('far');
-            } else {
-                icon.classList.add('far');
-                icon.classList.remove('fas');
-            }
-        })
-        .catch(error => console.error('Error updating favorite:', error));
-    }
+            fetch(`/favorite/${ticker}`, { method: currentFavorite ? 'DELETE' : 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the icon based on the server
+                    if (data.isFavorited) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                    }
+                } else {
+                    console.error('Failed to update favorite status:', data.message);
+                }
+            })
+            .catch(error => console.error('Error updating favorite:', error));
+        }
+
     </script>
 
 </body>
