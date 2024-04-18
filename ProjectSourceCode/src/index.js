@@ -16,7 +16,7 @@ var validator = require('validator');
 const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
-  partialsDir: __dirname + '/views/partials',
+  partialsDir: __dirname + '/views/partials'
 });
 
 // Register `hbs` as our view engine using its bound `engine()` function.
