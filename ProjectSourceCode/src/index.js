@@ -279,6 +279,9 @@ app.get('/portfolio', auth, async (req, res) => {
     console.log(timeStrings[i]);
   }
   //Now we'll assemble the portfolio into 2 arrays, one representing ticker symbols and the other shares owned
+  //They're matched by index, so for the table, what you'd probably want to do is to take their sizes from the num_of_results variable
+  //And then loop through them in the partial using that value.
+
   let portTickers = [];
   let portShares = [];
 
@@ -300,6 +303,11 @@ app.get('/portfolio', auth, async (req, res) => {
   //at each given date in timeValues, we'll query the API for each of our stocks to get the price of that stock at that date
   //Then, we'll multiply the values returned by the shares owned for those stocks and sum them up
 
+  //Because putting everything we need in one API call makes things so complicated, I couldn't handle more than three data points
+  //yesterday_sum is for yesterday
+  //db_yesterday is day before yesterday (2 days ago)
+  //db_db_yesterday is day before day before yesterday (3 days ago)
+
   let yesterday_sum = 0;
   let db_yesterday_sum = 0;
   let db_db_yesterday_sum = 0;
@@ -313,6 +321,9 @@ app.get('/portfolio', auth, async (req, res) => {
 
   console.log(tickerConcat);
   
+  //From this point forwards I'm not gonna lie, I can't explain jack
+  //This absolute mess of an API call is how we actually get the data for our graph
+
   const result_2 = await axios({
       url: `http://api.marketstack.com/v1/eod`,
       method: `GET`,
