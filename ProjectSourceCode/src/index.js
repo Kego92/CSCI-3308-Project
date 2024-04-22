@@ -93,7 +93,7 @@ app.get('/welcome', (req, res) => {
 
 app.get('/login', (req, res) => {
   const errorMessage = req.query.error ? decodeURIComponent(req.query.error) : null;
-
+  console.log(`Error in login: ${errorMessage}`);
   res.render('pages/login', { error: errorMessage }, (err, html) => {
     if (err) {
       console.error('Render error:', err);
@@ -234,7 +234,7 @@ app.get('/favorites', auth, async (req, res) => {
         }))
       : [];
 
-    console.log("favdata:",favoritesData);
+    // console.log("favdata:",favoritesData);
 
     res.render('pages/favorites', { favorite: favoritesData });
   } catch (err) {
@@ -258,7 +258,9 @@ app.get('/portfolio', auth, (req, res) => {
 
 // GET search
 app.get('/search', auth, (req, res) => {
-  res.render('pages/search', (err, html) => {
+  console.log(`req in search: ${req.query.error}`);
+  const search_error = req.query.error;
+  res.render('pages/search', { error: search_error }, (err, html) => {
     if (err) {
       console.error('Render error:', err);
       return res.send(500, 'An error occurred while rendering the search page.');
@@ -293,7 +295,7 @@ app.post('/search', (req, res) =>{
       if (results.data)
       {
         //I print it out immediately to make things easier to visualize on my end.
-        console.log(results.data);
+        // console.log(results.data);
         searched_stock = results.data;
         //Once we have our results, we render the page again while passing the results to search.hbs
         //Within that file, there's a mechanism to build cards from whatever is put in.
@@ -312,6 +314,78 @@ app.post('/search', (req, res) =>{
     });
 
 });
+
+
+// CURRENTLY I AM ABLE TO ADD AND REMOVE STOCKS, HOWEVER, I AM ONLY ABLE TO REMOVE ONE
+// IF AND ONLY IF I HAVE NOT LEFT THE CURRENT RENDER OF THE SEARCH PAGE. ALSO DURING EARLIER
+// TESTING, I WAS ADDING MULTIPLE STOCKS, SO 1@1.COM LOVES APPLE AND HAS FAVORITED IT 4 TIMES.
+// THIS IS AN EASY FIX AND ONLY REQUIRES SOME SQL TUNING THAT WILL REMOVE REPEAT ITEMS. 
+// TLDR; IF ITS BEEN ADDED TO FAVORITES EARLIER IT CAN NO LONGER BE REMOVED.
+
+// POST route to add a favorite
+app.post('/favorite/:ticker', async (req, res) => {
+  console.log('Inside of post method');
+    const { ticker } = req.params;
+    const userId = req.session.user.user_id;
+
+    try {
+        let stock = await db.oneOrNone('SELECT stock_id FROM stocks WHERE ticker_symbol = $1', ticker);
+        
+        // If the stock doesn't exist, insert it first
+        if (!stock) {
+            await db.none('INSERT INTO stocks (ticker_symbol) VALUES ($1)', ticker);
+            stock = await db.one('SELECT stock_id FROM stocks WHERE ticker_symbol = $1', ticker);
+        }
+
+        // Check if already favorited
+        const alreadyFavorited = await db.oneOrNone('SELECT 1 FROM users_to_favorite_stocks WHERE user_id = $1 AND stock_id = $2', [userId, stock.stock_id]);
+        if (alreadyFavorited) {
+          // return res.redirect(`/search?error=${encodeURIComponent('Stock is already favorited')}`);
+            return res.status(400).json({ success: false, message: 'Stock already favorited' });
+        }
+
+        // Then insert into favorites
+        await db.none('INSERT INTO users_to_favorite_stocks (user_id, stock_id) VALUES ($1, $2)', [userId, stock.stock_id]);
+        console.log(`Added favorite: User ${userId} added stock ${ticker}`);
+        res.json({ success: true, isFavorited: true });
+    } catch (error) {
+        console.error(`Error adding favorite for User ${userId} on stock ${ticker}: ${error}`);
+        // return res.redirect(`/search?error=${encodeURIComponent('Stock is already favorited')}`);
+        res.status(500).json({ success: false, message: 'Failed to add favorite' });
+    }
+});
+
+// DELETE route to remove a favorite
+app.delete('/favorite/:ticker', async (req, res) => {
+  console.log('inside of delete method');
+  const { ticker } = req.params;
+  const userId = req.session.user.user_id;
+  
+  try {
+        const stock = await db.one('SELECT stock_id FROM stocks WHERE ticker_symbol = $1', ticker);
+        const before = await db.any(`SELECT * FROM users_to_favorite_stocks`); 
+        await db.none('DELETE FROM users_to_favorite_stocks WHERE user_id = $1 AND stock_id = $2', [userId, stock.stock_id]);
+        const after = await db.any(`SELECT * FROM users_to_favorite_stocks`);
+        if (after < before)
+        {  
+          console.log(`Removed favorite: User ${userId} removed stock ${ticker}`);
+          res.json({ success: true, isFavorited: false });   
+        }
+        else
+        {
+          console.error(`Error removing favorite for User ${userId} on stock ${ticker}: ${error}`);
+          // return res.redirect(`/search?error=${encodeURIComponent('Stock is not favorited, cannot be deleted')}`);
+          res.status(500).json({ success: false, message: 'Failed to remove favorite' });    
+        }
+  } catch (error) {
+      console.error(`Error removing favorite for User ${userId} on stock ${ticker}: ${error}`);
+      // return res.redirect(`/search?error=${encodeURIComponent('Stock is not favorited, cannot be deleted')}`);
+      res.status(500).json({ success: false, message: 'Failed to remove favorite' });
+  }
+});
+
+
+
 
 // Catch-all error endpoint
 app.use((err, req, res, next) => {
