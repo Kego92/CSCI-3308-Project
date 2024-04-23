@@ -5,7 +5,7 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <link rel="stylesheet" type="text/css" href="/css/login.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
 <body>
     {{#if error}}
@@ -14,32 +14,32 @@
     <!--This form contains the search bar.
         The text typed into it is passed to the post /search method when the button is clicked.-->
     <form action="/search" method="post">
-        <label for="search-bar">Search</label>
+        <label for="search-bar" class="form-text">Search</label>
         <!--This is the input text boxt. req.body.input is used in the axios call to the API-->
         <input id="search-bar" name="input" type="text">
         <button type="submit">Search</button>
     </form>
-    <h3>Results</h3>
+    <h2>Results</h2>
     <!--Down here is where, if any, the results of the search will show up
         An array of stock info is passed to the partial, which is then processed here
         putting each stock's symbol and company name into a card
         The symbol goes in the head, the name in the body
         There will also be a button at the right end of each card that will add that stock to the user's favorite list-->
-    <div>
+    <div class="results">
         <!--The code takes in a "searched_stock" object from the post method, then for each "result" in it, makes a card
         Each result has a ticker and name, which are used for the title and body of the card respectively-->
         {{#each searched_stock.results}}
         <div class="card">
-            <div clas="card-body">
+            <div class="card-body">
                 <h5 class="card-title">
                     {{this.ticker}}
                 </h5>
                 <p class="card-text">
                     {{this.name}}
-                    <button class="float-right" align="right" onclick="deleteFavorite(this, '{{this.ticker}}')">
+                    <button class="float-right delete-button" align="right" onclick="deleteFavorite(this, '{{this.ticker}}')">
                         Delete
                     </button>
-                    <button class="float-right" align="right" onclick="addFavorite(this, '{{this.ticker}}')">
+                    <button class="float-right add-button" align="right" onclick="addFavorite(this, '{{this.ticker}}')">
                         Add
                     </button>
                 </p>

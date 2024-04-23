@@ -76,19 +76,17 @@ const auth = (req, res, next) => {
 };
 
 // ------------------------------------------  ROUTES  --------------------------------------------
-
-// app.get('/home', auth, (req, res) => {
-//   res.render('pages/home', {}, (err, html) => {
-//     if (err) {
-//       console.error('Render error:', err);
-//       return res.send(500, 'An error occurred while rendering the home page.');
-//     }
-//     res.send(html);
-//   });
-// });
-
-app.get('/', (req, res) => {
-  res.redirect('/login');
+app.get("/",(req,res) => {
+  res.redirect("/login");
+})
+app.get('/home', auth, (req, res) => {
+  res.redirect('/favorites', {}, (err, html) => {
+    if (err) {
+      console.error('Render error:', err);
+      return res.send(500, 'An error occurred while rendering the home page.');
+    }
+    res.send(html);
+  });
 });
 
 app.get('/welcome', (req, res) => {
@@ -109,6 +107,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(req.body)
   const query = 'select * from users where users.email = $1 LIMIT 1';
   const values = [email];
 
