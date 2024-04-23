@@ -7,8 +7,36 @@
 
 body {
     background-color: #163840 !important;
+    text-align: center;
+    margin: auto;
 }
 
+.card-container {
+    display: flex;
+    flex-direction: row;
+    max-height: 100%;
+}
+
+img {
+    width:50%;
+    height:100%;
+}
 .form-text {
+    color: #346773;
+}
+h1 {
     color: #85F2A0;
+    text-align: center;
+}
+
+h2 {
+    color: #85F2A0;
+    text-align: center;
+}
+.card {
+    width: 40%;
+    margin: 50px auto;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }

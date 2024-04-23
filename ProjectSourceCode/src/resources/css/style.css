@@ -1,5 +1,3 @@
-
-
 /* Color Theme Swatches in Hex */
 .Abstract-Finance-1-hex { color: #163840; }
 .Abstract-Finance-2-hex { color: #346773; }
@@ -10,7 +8,12 @@
 body {
     background-color: #163840 !important;
 }
-
+h2 {
+    color: aliceblue;
+}
+.form-text{
+    color:aliceblue;
+}
 .navbar {
     opacity: 60%;
     color: #50BF80;
@@ -29,4 +32,34 @@ body {
 .favorite-button .fas {
     color: gold;
 }
+.results{
+    max-height: min-content;
+    overflow: scroll;
+}
 
+.card {
+    background-color: #163840 !important;
+    border: 1px;
+}
+.card-body {
+    background-color: #163840;
+    color:#50BF80;
+    border-radius: 20%;
+    margin: auto;
+}
+
+.add-button {
+    background-color: #50BF80;
+    border: #163840;
+    border-radius: 15%;
+    color:#163840;
+    margin: 0 10px;
+}
+
+.delete-button {
+    background-color: darkred;
+    border: #163840;
+    border-radius: 15%;
+    color: #5B98A6;
+    margin: 0 10px;
+}

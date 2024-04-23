@@ -76,7 +76,9 @@ const auth = (req, res, next) => {
 };
 
 // ------------------------------------------  ROUTES  --------------------------------------------
-
+app.get("/",(req,res) => {
+  res.redirect("/login");
+})
 app.get('/home', auth, (req, res) => {
   res.render('pages/home', {}, (err, html) => {
     if (err) {
@@ -105,6 +107,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(req.body)
   const query = 'select * from users where users.email = $1 LIMIT 1';
   const values = [email];
 
@@ -130,7 +133,7 @@ app.post('/login', async (req, res) => {
     const user = await db.one(query, values);
 
     
-    if (user && user.password === password) // (user && await bcrypt.compare(password, user.password)) 
+    if (user && await bcrypt.compare(password, user.password)) 
     {
       req.session.user = { user_id: user.user_id, email: user.email };
       req.session.save(err => {
