@@ -77,14 +77,18 @@ const auth = (req, res, next) => {
 
 // ------------------------------------------  ROUTES  --------------------------------------------
 
-app.get('/home', auth, (req, res) => {
-  res.render('pages/home', {}, (err, html) => {
-    if (err) {
-      console.error('Render error:', err);
-      return res.send(500, 'An error occurred while rendering the home page.');
-    }
-    res.send(html);
-  });
+// app.get('/home', auth, (req, res) => {
+//   res.render('pages/home', {}, (err, html) => {
+//     if (err) {
+//       console.error('Render error:', err);
+//       return res.send(500, 'An error occurred while rendering the home page.');
+//     }
+//     res.send(html);
+//   });
+// });
+
+app.get('/', (req, res) => {
+  res.redirect('/favorites');
 });
 
 app.get('/welcome', (req, res) => {
