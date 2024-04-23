@@ -286,17 +286,17 @@ app.get('/portfolio', auth, async (req, res) => {
   let portShares = [];
 
   console.log("user id is ", req.session.user.user_id);
-  const result = await db.any(`SELECT stock_ticker, shares_owned FROM users_to_portfolio_stocks WHERE user_id = ${req.session.user.user_id}`);
+  const result = await db.any(`SELECT ticker_symbol FROM users_to_favorite_stocks
+    INNER JOIN stocks ON users_to_favorite_stocks.stock_id = stocks.stock_id WHERE user_id = ${req.session.user.user_id}`);
 
   console.log("result: ", result);
 
   let num_of_results = result.length;
   for (let i = 0; i < num_of_results; i++)
   {
-    portTickers.push(result[i].stock_ticker);
+    portTickers.push(result[i].ticker_symbol);
     console.log(portTickers[i]);
-    portShares.push(result[i].shares_owned);
-    console.log(portShares[i]);
+    portShares.push(1);
   }
   
   //now that we have the contents of the user's portfolio in order, we'll get our data points
@@ -332,7 +332,7 @@ app.get('/portfolio', auth, async (req, res) => {
       params: {
       access_key: `33b6822b22ee82763a83ffddb98acaf5`,
       symbols: tickerConcat,
-      date_from: timeStrings[0],
+      date_from: timeStrings[1],
       date_to: timeStrings[3],
   }});
   
