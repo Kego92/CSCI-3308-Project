@@ -88,7 +88,7 @@ const auth = (req, res, next) => {
 // });
 
 app.get('/', (req, res) => {
-  res.redirect('/favorites');
+  res.redirect('/login');
 });
 
 app.get('/welcome', (req, res) => {
@@ -134,7 +134,7 @@ app.post('/login', async (req, res) => {
     const user = await db.one(query, values);
 
     
-    if (user && user.password === password) // (user && await bcrypt.compare(password, user.password)) 
+    if (user && await bcrypt.compare(password, user.password)) 
     {
       req.session.user = { user_id: user.user_id, email: user.email };
       req.session.save(err => {
