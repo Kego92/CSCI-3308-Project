@@ -80,7 +80,7 @@ app.get("/",(req,res) => {
   res.redirect("/login");
 })
 app.get('/home', auth, (req, res) => {
-  res.render('pages/home', {}, (err, html) => {
+  res.redirect('/favorites', {}, (err, html) => {
     if (err) {
       console.error('Render error:', err);
       return res.send(500, 'An error occurred while rendering the home page.');
