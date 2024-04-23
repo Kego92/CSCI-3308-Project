@@ -41,7 +41,7 @@ DROP TABLE IF EXISTS users_to_portfolio_stocks CASCADE;
 CREATE TABLE IF NOT EXISTS users_to_portfolio_stocks (
     user_id INT NOT NULL,
     --I've changed stock ID to stock_ticker since the stocks table is actually redundant
-    stock_ticker INT NOT NULL,
+    stock_ticker VARCHAR(15) NOT NULL,
     shares_owned INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
