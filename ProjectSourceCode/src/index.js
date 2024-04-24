@@ -76,9 +76,11 @@ const auth = (req, res, next) => {
 };
 
 // ------------------------------------------  ROUTES  --------------------------------------------
-
+app.get("/",(req,res) => {
+  res.redirect("/login");
+})
 app.get('/home', auth, (req, res) => {
-  res.render('pages/home', {}, (err, html) => {
+  res.redirect('/favorites', {}, (err, html) => {
     if (err) {
       console.error('Render error:', err);
       return res.send(500, 'An error occurred while rendering the home page.');
@@ -105,6 +107,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(req.body)
   const query = 'select * from users where users.email = $1 LIMIT 1';
   const values = [email];
 
@@ -130,7 +133,7 @@ app.post('/login', async (req, res) => {
     const user = await db.one(query, values);
 
     
-    if (user && user.password === password) // (user && await bcrypt.compare(password, user.password)) 
+    if (user && await bcrypt.compare(password, user.password)) 
     {
       req.session.user = { user_id: user.user_id, email: user.email };
       req.session.save(err => {
@@ -246,8 +249,130 @@ app.get('/favorites', auth, async (req, res) => {
 
 
 // GET portfolio
-app.get('/portfolio', auth, (req, res) => {
-  res.render('pages/portfolio', (err, html) => {
+app.get('/portfolio', auth, async (req, res) => {
+  let v = 20;
+
+  //to start, we'll set up our axis
+  //our x axis is time. We'll get today's date, then go back two days at a time 7 times.
+  //new Date generates an object with today's date and time
+
+  let today = new Date();
+  //today = today.getUTCDate();
+  //console.log("THE DATE IS");
+  //console.log(today);
+  //document.getElementById("demo").innerHTML = today.toUTCString();
+
+  //now we'll make 2 arrays
+  //one has the time values, and is passed to the API for data
+  //the other has time strings, and is used to label the graph
+  let timeValues = [];
+  let timeStrings = [];
+
+  for (let i = 0; i < 4; i++)
+  {
+    let dayOfMonth = today.getDate();
+    let exDate = new Date();
+    exDate.setDate(dayOfMonth - 4 + i);
+    timeValues.push(exDate);
+    //this gets a yyyy-mm-dd string, which we need to query the API
+    timeStrings.push(exDate.toISOString().split('T')[0]);
+  }
+  for (let i=0; i < 4; i++)
+  {
+    console.log(timeStrings[i]);
+  }
+  //Now we'll assemble the portfolio into 2 arrays, one representing ticker symbols and the other shares owned
+  //They're matched by index, so for the table, what you'd probably want to do is to take their sizes from the num_of_results variable
+  //And then loop through them in the partial using that value.
+
+  let portTickers = [];
+  let portShares = [];
+
+  console.log("user id is ", req.session.user.user_id);
+  const result = await db.any(`SELECT ticker_symbol FROM users_to_favorite_stocks
+    INNER JOIN stocks ON users_to_favorite_stocks.stock_id = stocks.stock_id WHERE user_id = ${req.session.user.user_id}`);
+
+  console.log("result: ", result);
+
+  let num_of_results = result.length;
+  for (let i = 0; i < num_of_results; i++)
+  {
+    portTickers.push(result[i].ticker_symbol);
+    console.log(portTickers[i]);
+    portShares.push(1);
+  }
+  
+  //now that we have the contents of the user's portfolio in order, we'll get our data points
+  //at each given date in timeValues, we'll query the API for each of our stocks to get the price of that stock at that date
+  //Then, we'll multiply the values returned by the shares owned for those stocks and sum them up
+
+  //Because putting everything we need in one API call makes things so complicated, I couldn't handle more than three data points
+  //yesterday_sum is for yesterday
+  //db_yesterday is day before yesterday (2 days ago)
+  //db_db_yesterday is day before day before yesterday (3 days ago)
+
+  let yesterday_sum = 0;
+  let db_yesterday_sum = 0;
+  let db_db_yesterday_sum = 0;
+ 
+  let tickerConcat = portTickers[0];
+  for (let i = 1; i < num_of_results; i++)
+  {
+    tickerConcat += ','
+    tickerConcat += portTickers[i];
+  }
+
+  console.log(tickerConcat);
+  
+  //From this point forwards I'm not gonna lie, I can't explain jack
+  //This absolute mess of an API call is how we actually get the data for our graph
+
+  const result_2 = await axios({
+      url: `http://api.marketstack.com/v1/eod`,
+      method: `GET`,
+      dataType: `json`,
+      headers: {},
+      params: {
+      access_key: `33b6822b22ee82763a83ffddb98acaf5`,
+      symbols: tickerConcat,
+      date_from: timeStrings[1],
+      date_to: timeStrings[3],
+  }});
+  
+  let datasize = result_2.data.data.length;
+  for (let i = 0; i < datasize; i++)
+  {
+    tickIndex = i % num_of_results;
+    if (result_2.data.data[i].date.split('T')[0] == timeStrings[1])
+    {
+      db_db_yesterday_sum += portShares[tickIndex] * result_2.data.data[i].close;
+      console.log("THIS IS FROM 3 DAYS AGO");
+      console.log(`WE HAVE ${portShares[tickIndex]} OF THESE SHARES THAT COSTED ${result_2.data.data[i].close}`);
+      console.log(`${portShares[tickIndex] * result_2.data.data[i].close} IS ADDED`);
+
+    }
+    else if (result_2.data.data[i].date.split('T')[0] == timeStrings[2])
+    {
+      db_yesterday_sum += portShares[tickIndex] * result_2.data.data[i].close;
+      console.log("THIS IS FROM 2 DAYS AGO");
+      console.log(`WE HAVE ${portShares[tickIndex]} OF THESE SHARES THAT COSTED ${result_2.data.data[i].close}`);
+      console.log(`${portShares[tickIndex] * result_2.data.data[i].close} IS ADDED`);
+    }
+    else if (result_2.data.data[i].date.split('T')[0] == timeStrings[3])
+    {
+      yesterday_sum += portShares[tickIndex] * result_2.data.data[i].close;
+      console.log("THIS IS FROM 1 DAY AGO");
+      console.log(`WE HAVE ${portShares[tickIndex]} OF THESE SHARES THAT COSTED ${result_2.data.data[i].close}`);
+      console.log(`${portShares[tickIndex] * result_2.data.data[i].close} IS ADDED`);
+    }
+    console.log(result_2.data.data[i]);
+  }
+  console.log("HERE ARE OUR SUMS");
+  console.log(yesterday_sum);
+  console.log(db_yesterday_sum);
+  console.log(db_db_yesterday_sum);
+
+  res.render('pages/portfolio', {db_db_yesterday_sum, db_yesterday_sum, yesterday_sum}, (err, html) => {
     if (err) {
       console.error('Render error:', err);
       return res.send(500, 'An error occurred while rendering the portfolio page.');
@@ -255,6 +380,8 @@ app.get('/portfolio', auth, (req, res) => {
     res.send(html);
   });
 });
+  
+  
 
 // GET search
 app.get('/search', auth, (req, res) => {
