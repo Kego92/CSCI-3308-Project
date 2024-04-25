@@ -1,6 +1,9 @@
 <!--TODO: create layout for portfolio (graph and table)-->
 
 <body>
+    {{#if noFavorites}}
+    <p>You currently have no favorite stocks.</p>
+    {{else}}
     <p id="demo">w</p>
 
     <div class="container">
@@ -27,4 +30,6 @@
         });
 
     </script>
+    {{/if}}
+    
 </body>

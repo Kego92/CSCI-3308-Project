@@ -294,6 +294,11 @@ app.get('/portfolio', auth, async (req, res) => {
 
   console.log("result: ", result);
 
+  if (result.length === 0) {
+    // If no favorite stocks, render the page without trying to fetch stock data
+    res.render('pages/portfolio', { noFavorites: true });
+    return;
+  }
   let num_of_results = result.length;
   for (let i = 0; i < num_of_results; i++)
   {
