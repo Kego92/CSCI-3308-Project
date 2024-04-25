@@ -4,8 +4,7 @@ Group 016-4
 
 ## Description
 
-Our project is focused around building a platform that makes it easier for anyone to view thier stocks.
-Our site makes it easy to see current values, of your total portfolio, or of individual stocks.
+Stock N Load is the stock tracking platform for the modern day investor. In the modern day with there being so many different stock trading platforms it can be easy to get lost in too much data. Stock N Load solves this problem by providing the user with the data they need to understand activity on the stock market. No pop-ups, no marketing notifications, just market info.
 
 ## Contributors
 Jack Bayer
@@ -31,7 +30,7 @@ NPM
 4. In web browser go to http://localhost:3000/
 
 ## How to Run Tests
-Tests are automatically ran with 'docker compose up'!
+Tests are automatically ran with 'docker compose up', just watch terminal to see the output!
 
 ## Link to Deployed App
 Coming soon!
