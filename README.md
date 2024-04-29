@@ -33,4 +33,4 @@ NPM
 Tests are automatically ran with 'docker compose up', just watch terminal to see the output!
 
 ## Link to Deployed App
-<a href="http://52.190.3.81:3000/login">Link to site</a>
+<a href="dozencrust.com:3000">Link to site</a>
